@@ -423,6 +423,10 @@ my %oOptionRule =
             {
                 &OPTION_RULE_REQUIRED => true
             },
+            &OP_REMOTE =>
+            {
+                &OPTION_RULE_REQUIRED => false
+            },
             &OP_RESTORE =>
             {
                 &OPTION_RULE_REQUIRED => true
@@ -859,6 +863,15 @@ my %oOptionRule =
             lc(INFO)   => true,
             lc(DEBUG)  => true,
             lc(TRACE)  => true
+        },
+        &OPTION_RULE_OPERATION =>
+        {
+            &OP_ARCHIVE_GET => true,
+            &OP_ARCHIVE_PUSH => true,
+            &OP_BACKUP => true,
+            &OP_EXPIRE => true,
+            &OP_INFO => true,
+            &OP_RESTORE => true
         }
     },
 
@@ -875,6 +888,15 @@ my %oOptionRule =
             lc(INFO)   => true,
             lc(DEBUG)  => true,
             lc(TRACE)  => true
+        },
+        &OPTION_RULE_OPERATION =>
+        {
+            &OP_ARCHIVE_GET => true,
+            &OP_ARCHIVE_PUSH => true,
+            &OP_BACKUP => true,
+            &OP_EXPIRE => true,
+            &OP_INFO => true,
+            &OP_RESTORE => true
         }
     },
 
@@ -1744,6 +1766,7 @@ sub operationWrite
 
         if ((!defined($oOptionRule{$strOption}{&OPTION_RULE_OPERATION}) ||
              defined($oOptionRule{$strOption}{&OPTION_RULE_OPERATION}{$strNewOperation})) &&
+             defined($oOption{$strOption}{value}) &&
             ($bIncludeConfig ? $oOption{$strOption}{source} ne SOURCE_DEFAULT : $oOption{$strOption}{source} eq SOURCE_PARAM))
         {
             my $strParam;
