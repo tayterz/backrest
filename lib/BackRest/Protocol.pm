@@ -207,9 +207,11 @@ sub greeting_read
     my $self = shift;
 
     # Make sure that the remote is running the right version
-    if ($self->read_line($self->{hOut}) ne $self->{strGreeting})
+    my $strLine = $self->read_line($self->{hOut});
+
+    if ($strLine ne $self->{strGreeting})
     {
-        confess &log(ERROR, 'protocol version mismatch');
+        confess &log(ERROR, "protocol version mismatch: ${strLine}");
     }
 }
 
@@ -1277,27 +1279,6 @@ sub command_execute
     $self->command_write($strCommand, $oParamRef);
 
     return $self->output_read($bOutputRequired, $strErrorPrefix);
-}
-
-####################################################################################################################################
-# paramGet
-#
-# Helper function that returns the param or an error if required and it does not exist.
-####################################################################################################################################
-sub paramGet
-{
-    my $oParamHashRef = shift;
-    my $strParam = shift;
-    my $bRequired = shift;
-
-    my $strValue = ${$oParamHashRef}{$strParam};
-
-    if (!defined($strValue) && (!defined($bRequired) || $bRequired))
-    {
-        confess "${strParam} must be defined";
-    }
-
-    return $strValue;
 }
 
 1;

@@ -94,14 +94,14 @@ sub BackRestTestFile_Test
     #-------------------------------------------------------------------------------------------------------------------------------
     my $oRemote = BackRest::Protocol->new
     (
-        $strHost,                               # Host
-        $strUser,                               # User
-        BackRestTestCommon_CommandRemoteGet(),  # Command
-        $strStanza,                             # Stanza
-        '',                                     # Repo Path
-        OPTION_DEFAULT_BUFFER_SIZE,             # Buffer size
-        OPTION_DEFAULT_COMPRESS_LEVEL,          # Compress level
-        OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK,  # Compress network level
+        $strHost,                                   # Host
+        $strUser,                                   # User
+        BackRestTestCommon_CommandRemoteFullGet(),  # Command
+        $strStanza,                                 # Stanza
+        '',                                         # Repo Path
+        OPTION_DEFAULT_BUFFER_SIZE,                 # Buffer size
+        OPTION_DEFAULT_COMPRESS_LEVEL,              # Compress level
+        OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK,      # Compress network level
     );
 
     my $oLocal = new BackRest::Protocol

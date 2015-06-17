@@ -704,6 +704,7 @@ my %oOptionRule =
             &OP_ARCHIVE_GET => true,
             &OP_ARCHIVE_PUSH => true,
             &OP_INFO => true,
+            &OP_REMOTE => true,
             &OP_RESTORE => true
         },
     },
@@ -811,6 +812,7 @@ my %oOptionRule =
             &OP_ARCHIVE_PUSH => true,
             &OP_BACKUP => true,
             &OP_INFO => true,
+            &OP_REMOTE => true,
             &OP_RESTORE => true
         }
     },
@@ -828,6 +830,7 @@ my %oOptionRule =
             &OP_ARCHIVE_PUSH => true,
             &OP_BACKUP => true,
             &OP_INFO => true,
+            &OP_REMOTE => true,
             &OP_RESTORE => true
         }
     },
@@ -1166,6 +1169,7 @@ sub configLoad
     # Set repo-remote-path to repo-path if it is not set
     if (optionTest(OPTION_REPO_PATH) && !optionTest(OPTION_REPO_REMOTE_PATH))
     {
+        $oOption{&OPTION_REPO_REMOTE_PATH}{source} = $oOption{&OPTION_REPO_PATH}{source};
         $oOption{&OPTION_REPO_REMOTE_PATH}{value} = optionGet(OPTION_REPO_PATH);
     }
 
@@ -1718,16 +1722,40 @@ sub optionGet
 sub operationWrite
 {
     my $strNewOperation = shift;
+    my $bIncludeConfig = shift;
+    my $strCommand = shift;
 
-    my $strCommand = abs_path($0);
+    $strCommand = defined($strCommand) ? $strCommand : abs_path($0);
+
+    # If config setting are included then also set --no-config
+    $bIncludeConfig = defined($bIncludeConfig) ? $bIncludeConfig : false;
+
+    if ($bIncludeConfig)
+    {
+        $strCommand .= ' --no-config';
+    }
 
     foreach my $strOption (sort(keys(%oOption)))
     {
+        next if ($bIncludeConfig && $strOption eq OPTION_CONFIG);
+
+        # &log(WARN, "option ${strOption} = " . (defined($oOption{$strOption}{source}) ? $oOption{$strOption}{source} : 'undef') .
+        #            ", " . (defined($oOption{$strOption}{value}) ? $oOption{$strOption}{value} : 'undef'));
+
         if ((!defined($oOptionRule{$strOption}{&OPTION_RULE_OPERATION}) ||
              defined($oOptionRule{$strOption}{&OPTION_RULE_OPERATION}{$strNewOperation})) &&
-            $oOption{$strOption}{source} eq SOURCE_PARAM)
+            ($bIncludeConfig ? $oOption{$strOption}{source} ne SOURCE_DEFAULT : $oOption{$strOption}{source} eq SOURCE_PARAM))
         {
-            my $strParam = "--${strOption}=$oOption{$strOption}{value}";
+            my $strParam;
+
+            if ($oOptionRule{$strOption}{&OPTION_RULE_TYPE} eq OPTION_TYPE_BOOLEAN)
+            {
+                $strParam = '--' . ($oOption{$strOption}{value} ? '' : 'no-') . $strOption;
+            }
+            else
+            {
+                $strParam = "--${strOption}=$oOption{$strOption}{value}";
+            }
 
             if (index($oOption{$strOption}{value}, " ") != -1)
             {
@@ -1818,7 +1846,7 @@ sub protocolGet
     (
         optionRemoteTypeTest(DB) ? optionGet(OPTION_DB_HOST) : optionGet(OPTION_BACKUP_HOST),
         optionRemoteTypeTest(DB) ? optionGet(OPTION_DB_USER) : optionGet(OPTION_BACKUP_USER),
-        optionGet(OPTION_COMMAND_REMOTE),
+        operationWrite(OP_REMOTE, true, optionGet(OPTION_COMMAND_REMOTE)),
         optionGet(OPTION_STANZA, false),
         optionGet(OPTION_REPO_REMOTE_PATH),
         optionGet(OPTION_BUFFER_SIZE),
