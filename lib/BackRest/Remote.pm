@@ -84,14 +84,17 @@ sub process
     (
         undef,      # Host
         undef,      # User
-        'remote'    # Command
+        'remote',   # Command
+        optionGet(OPTION_BUFFER_SIZE),
+        optionGet(OPTION_COMPRESS_LEVEL),
+        optionGet(OPTION_COMPRESS_LEVEL_NETWORK)
     );
 
     # Create the file object
     my $oFile = new BackRest::File
     (
-        $oProtocol->stanza(),
-        $oProtocol->repoPath(),
+        optionGet(OPTION_STANZA, false),
+        optionGet(OPTION_REPO_REMOTE_PATH, false),
         undef,
         $oProtocol,
     );

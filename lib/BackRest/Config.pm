@@ -1851,7 +1851,7 @@ sub protocolGet
     {
         return new BackRest::Protocol
         (
-            undef, undef, undef, undef, undef,
+            undef, undef, undef,
             optionGet(OPTION_BUFFER_SIZE),
             operationTest(OP_EXPIRE) ? OPTION_DEFAULT_COMPRESS_LEVEL : optionGet(OPTION_COMPRESS_LEVEL),
             operationTest(OP_EXPIRE) ? OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK : optionGet(OPTION_COMPRESS_LEVEL_NETWORK)
@@ -1870,8 +1870,6 @@ sub protocolGet
         optionRemoteTypeTest(DB) ? optionGet(OPTION_DB_HOST) : optionGet(OPTION_BACKUP_HOST),
         optionRemoteTypeTest(DB) ? optionGet(OPTION_DB_USER) : optionGet(OPTION_BACKUP_USER),
         operationWrite(OP_REMOTE, true, optionGet(OPTION_COMMAND_REMOTE)),
-        optionGet(OPTION_STANZA, false),
-        optionGet(OPTION_REPO_REMOTE_PATH),
         optionGet(OPTION_BUFFER_SIZE),
         operationTest(OP_EXPIRE) ? OPTION_DEFAULT_COMPRESS_LEVEL : optionGet(OPTION_COMPRESS_LEVEL),
         operationTest(OP_EXPIRE) ? OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK : optionGet(OPTION_COMPRESS_LEVEL_NETWORK)

@@ -36,15 +36,13 @@ sub new
     my $strHost = shift;                # Host to connect to for remote (optional as this can also be used on the remote)
     my $strUser = shift;                # User to connect to for remote (must be set if strHost is set)
     my $strCommand = shift;             # Command to execute on remote ('remote' if this is the remote)
-    my $strStanza = shift;              # Stanza
-    my $strRepoPath = shift;            # Remote Repository Path
     my $iBlockSize = shift;             # Buffer size
     my $iCompressLevel = shift;         # Set compression level
     my $iCompressLevelNetwork = shift;  # Set compression level for network only compression
 
     # Debug
     logDebug(OP_PROTOCOL_NEW, DEBUG_CALL, undef,
-             {host => $strHost, user => $strUser, stanza => $strStanza, remoteRepoPath => $strRepoPath, command => $strCommand},
+             {host => $strHost, user => $strUser, command => $strCommand},
              defined($strHost) ? DEBUG : TRACE);
 
     # Create the class hash
@@ -53,10 +51,6 @@ sub new
 
     # Create the greeting that will be used to check versions with the remote
     $self->{strGreeting} = 'PG_BACKREST_REMOTE ' . version_get();
-
-    # Set stanza and repo path
-    $self->{strStanza} = $strStanza;
-    $self->{strRepoPath} = $strRepoPath;
 
     # Set default block size
     $self->{iBlockSize} = $iBlockSize;
@@ -102,17 +96,11 @@ sub new
         ($self->{hIn}, $self->{hOut}, $self->{hErr}, $self->{pId}) = $self->{oSSH}->open3($self->{strCommand});
 
         $self->greeting_read();
-        $self->setting_write($self->{strStanza}, $self->{strRepoPath},
-                             $self->{iBlockSize}, $self->{iCompressLevel}, $self->{iCompressLevelNetwork});
     }
     elsif (defined($strCommand) && $strCommand eq 'remote')
     {
         # Write the greeting so master process knows who we are
         $self->greeting_write();
-
-        # Read settings from master
-        ($self->{strStanza}, $self->{strRepoPath}, $self->{iBlockSize}, $self->{iCompressLevel},
-         $self->{iCompressLevelNetwork}) = $self->setting_read();
     }
 
     # Check block size
@@ -158,26 +146,6 @@ sub DESTROY
 }
 
 ####################################################################################################################################
-# repoPath
-####################################################################################################################################
-sub repoPath
-{
-    my $self = shift;
-
-    return $self->{strRepoPath};
-}
-
-####################################################################################################################################
-# stanza
-####################################################################################################################################
-sub stanza
-{
-    my $self = shift;
-
-    return $self->{strStanza};
-}
-
-####################################################################################################################################
 # CLONE
 ####################################################################################################################################
 sub clone
@@ -189,8 +157,6 @@ sub clone
         $self->{strHost},
         $self->{strUser},
         $self->{strCommand},
-        $self->{strStanza},
-        $self->{strRepoPath},
         $self->{iBlockSize},
         $self->{iCompressLevel},
         $self->{iCompressLevelNetwork}
@@ -225,59 +191,6 @@ sub greeting_write
     my $self = shift;
 
     $self->write_line(*STDOUT, $self->{strGreeting});
-}
-
-####################################################################################################################################
-# SETTING_READ
-#
-# Read the settings from the master process.
-####################################################################################################################################
-sub setting_read
-{
-    my $self = shift;
-
-    # Get Stanza
-    my $strStanza = $self->read_line(*STDIN);
-
-    # Get Repo Path
-    my $strRepoPath = $self->read_line(*STDIN);
-
-    # Tokenize the settings
-    my @stryToken = split(/ /, $self->read_line(*STDIN));
-
-    # Make sure there are the correct number of tokens
-    if (@stryToken != 4)
-    {
-        confess &log(ASSERT, 'settings token count is invalid', ERROR_PROTOCOL);
-    }
-
-    # Check for the setting token just to be sure
-    if ($stryToken[0] ne 'setting')
-    {
-        confess &log(ASSERT, 'settings token 0 must be \'setting\'');
-    }
-
-    # Return the settings
-    return $strStanza, $strRepoPath, $stryToken[1], $stryToken[2], $stryToken[3];
-}
-
-####################################################################################################################################
-# SETTING_WRITE
-#
-# Send settings to the remote process.
-####################################################################################################################################
-sub setting_write
-{
-    my $self = shift;
-    my $strStanza = shift;              # Database stanza
-    my $strRepoPath = shift;            # Path to the repository on the remote
-    my $iBlockSize = shift;             # Optionally, set the block size (defaults to DEFAULT_BLOCK_SIZE)
-    my $iCompressLevel = shift;         # Set compression level
-    my $iCompressLevelNetwork = shift;  # Set compression level for network only compression
-
-    $self->write_line($self->{hIn}, $strStanza);
-    $self->write_line($self->{hIn}, $strRepoPath);
-    $self->write_line($self->{hIn}, "setting ${iBlockSize} ${iCompressLevel} ${iCompressLevelNetwork}");
 }
 
 ####################################################################################################################################
