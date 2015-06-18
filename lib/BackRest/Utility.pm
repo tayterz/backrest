@@ -62,6 +62,9 @@ $oLogLevelRank{ERROR}{rank} = 2;
 $oLogLevelRank{ASSERT}{rank} = 1;
 $oLogLevelRank{OFF}{rank} = 0;
 
+# Construct the version file name
+my $strVersionFile = abs_path(dirname($0) . '/../VERSION');
+
 ####################################################################################################################################
 # FORMAT Constant
 #
@@ -100,11 +103,6 @@ sub version_get
     {
         return $strVersion;
     }
-
-    # Construct the version file name
-    my $strVersionFile = abs_path(dirname($0) . '/../VERSION');
-
-    &log(DEBUG, "path " . $0);
 
     # Open the file
     if (!open($hVersion, '<', $strVersionFile))

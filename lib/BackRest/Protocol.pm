@@ -55,8 +55,11 @@ sub new
     # Create the greeting that will be used to check versions with the remote
     if (defined($strName))
     {
+        $self->{strName} = $strName;
         $self->{strGreeting} = 'PG_BACKREST_' . uc($strName) . ' ' . version_get();
     }
+
+    $self->{bBackend} = $bBackend;
 
     # Set default block size
     $self->{iBlockSize} = $iBlockSize;
@@ -166,12 +169,14 @@ sub clone
 
     return BackRest::Protocol->new
     (
-        $self->{strHost},
-        $self->{strUser},
+        $self->{strName},
+        $self->{bBackend},
         $self->{strCommand},
         $self->{iBlockSize},
         $self->{iCompressLevel},
-        $self->{iCompressLevelNetwork}
+        $self->{iCompressLevelNetwork},
+        $self->{strHost},
+        $self->{strUser}
     );
 }
 
