@@ -28,6 +28,7 @@ use BackRest::File;
 use BackRest::Ini;
 use BackRest::Manifest;
 use BackRest::Protocol;
+use BackRest::Remote;
 use BackRest::Utility;
 
 use BackRestTest::CommonTest;
@@ -1511,7 +1512,7 @@ sub BackRestTestBackup_Test
     #-------------------------------------------------------------------------------------------------------------------------------
     # Create remotes
     #-------------------------------------------------------------------------------------------------------------------------------
-    my $oRemote = BackRest::Protocol->new
+    my $oRemote = new BackRest::Remote
     (
         $strHost,                                   # Host
         $strUserBackRest,                           # User
@@ -1521,7 +1522,7 @@ sub BackRestTestBackup_Test
         OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK,      # Compress network level
     );
 
-    my $oLocal = new BackRest::Protocol
+    my $oLocal = new BackRest::Remote
     (
         undef,                                  # Host
         undef,                                  # User

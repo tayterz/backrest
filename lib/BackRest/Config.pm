@@ -1865,7 +1865,7 @@ sub protocolGet
     }
 
     # Return the remote when required
-    my $oProtocolTemp = new BackRest::Protocol
+    my $oProtocolTemp = new BackRest::Remote
     (
         optionRemoteTypeTest(DB) ? optionGet(OPTION_DB_HOST) : optionGet(OPTION_BACKUP_HOST),
         optionRemoteTypeTest(DB) ? optionGet(OPTION_DB_USER) : optionGet(OPTION_BACKUP_USER),

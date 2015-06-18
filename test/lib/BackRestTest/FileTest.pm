@@ -92,7 +92,7 @@ sub BackRestTestFile_Test
     #-------------------------------------------------------------------------------------------------------------------------------
     # Create remotes
     #-------------------------------------------------------------------------------------------------------------------------------
-    my $oRemote = BackRest::Protocol->new
+    my $oRemote = new BackRest::Remote
     (
         $strHost,                                   # Host
         $strUser,                                   # User
@@ -102,7 +102,7 @@ sub BackRestTestFile_Test
         OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK,      # Compress network level
     );
 
-    my $oLocal = new BackRest::Protocol
+    my $oLocal = new BackRest::Remote
     (
         undef,                                  # Host
         undef,                                  # User

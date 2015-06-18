@@ -2,6 +2,7 @@
 # REMOTE MODULE
 ####################################################################################################################################
 package BackRest::Remote;
+use parent 'BackRest::Protocol';
 
 use strict;
 use warnings FATAL => qw(all);
@@ -25,6 +26,14 @@ use BackRest::Info;
 use BackRest::Protocol;
 use BackRest::Utility;
 
+
+####################################################################################################################################
+# Operation constants
+####################################################################################################################################
+use constant OP_REMOTE                                            => 'Remote';
+
+use constant OP_REMOTE_NEW                                        => OP_REMOTE . "->new";
+
 ####################################################################################################################################
 # Operation constants
 ####################################################################################################################################
@@ -40,10 +49,92 @@ use constant
 sub new
 {
     my $class = shift;                  # Class name
+    my $strHost = shift;                # Host to connect to for remote (optional as this can also be used on the remote)
+    my $strUser = shift;                # User to connect to for remote (must be set if strHost is set)
+    my $strCommand = shift;             # Command to execute on remote ('remote' if this is the remote)
+    my $iBlockSize = shift;             # Buffer size
+    my $iCompressLevel = shift;         # Set compression level
+    my $iCompressLevelNetwork = shift;  # Set compression level for network only compression
+
+    # Debug
+    logDebug(OP_REMOTE_NEW, DEBUG_CALL, undef,
+             {host => $strHost, user => $strUser, command => $strCommand},
+             defined($strHost) ? DEBUG : TRACE);
 
     # Create the class hash
     my $self = {};
     bless $self, $class;
+
+    # Create the greeting that will be used to check versions with the remote
+    $self->{strGreeting} = 'PG_BACKREST_REMOTE ' . version_get();
+
+    # Set default block size
+    $self->{iBlockSize} = $iBlockSize;
+
+    # Set compress levels
+    $self->{iCompressLevel} = $iCompressLevel;
+    $self->{iCompressLevelNetwork} = $iCompressLevelNetwork;
+
+    # If host is defined then make a connnection
+    if (defined($strHost))
+    {
+        # User must be defined
+        if (!defined($strUser))
+        {
+            confess &log(ASSERT, 'strUser must be defined');
+        }
+
+        # Command must be defined
+        if (!defined($strCommand))
+        {
+            confess &log(ASSERT, 'strCommand must be defined');
+        }
+
+        $self->{strHost} = $strHost;
+        $self->{strUser} = $strUser;
+        $self->{strCommand} = $strCommand . ' remote';
+
+        # Set SSH Options
+        my $strOptionSSHRequestTTY = 'RequestTTY=yes';
+        my $strOptionSSHCompression = 'Compression=no';
+
+        &log(TRACE, 'connecting to remote ssh host ' . $self->{strHost});
+
+        # Make SSH connection
+        $self->{oSSH} = Net::OpenSSH->new($self->{strHost}, timeout => 600, user => $self->{strUser},
+                                          master_opts => [-o => $strOptionSSHCompression, -o => $strOptionSSHRequestTTY]);
+
+        $self->{oSSH}->error and confess &log(ERROR, "unable to connect to $self->{strHost}: " . $self->{oSSH}->error,
+                                              ERROR_HOST_CONNECT);
+        &log(TRACE, 'connected to remote ssh host ' . $self->{strHost});
+
+        # Execute remote command
+        ($self->{hIn}, $self->{hOut}, $self->{hErr}, $self->{pId}) = $self->{oSSH}->open3($self->{strCommand});
+
+        $self->greeting_read();
+    }
+    elsif (defined($strCommand) && $strCommand eq 'remote')
+    {
+        # Write the greeting so master process knows who we are
+        $self->greeting_write();
+    }
+
+    # Check block size
+    if (!defined($self->{iBlockSize}))
+    {
+        confess &log(ASSERT, 'iBlockSize must be set');
+    }
+
+    # Check compress levels
+    if (!defined($self->{iCompressLevel}))
+    {
+        confess &log(ASSERT, 'iCompressLevel must be set');
+    }
+
+    if (!defined($self->{iCompressLevelNetwork}))
+    {
+        confess &log(ASSERT, 'iCompressLevelNetwork must be set');
+    }
 
     return $self;
 }
