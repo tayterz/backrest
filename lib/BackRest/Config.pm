@@ -1851,7 +1851,7 @@ sub protocolGet
     {
         return new BackRest::Protocol
         (
-            undef, undef, undef,
+            undef, false, undef,
             optionGet(OPTION_BUFFER_SIZE),
             operationTest(OP_EXPIRE) ? OPTION_DEFAULT_COMPRESS_LEVEL : optionGet(OPTION_COMPRESS_LEVEL),
             operationTest(OP_EXPIRE) ? OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK : optionGet(OPTION_COMPRESS_LEVEL_NETWORK)

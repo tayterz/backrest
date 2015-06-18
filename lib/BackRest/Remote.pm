@@ -30,9 +30,9 @@ use BackRest::Utility;
 ####################################################################################################################################
 # Operation constants
 ####################################################################################################################################
-use constant OP_REMOTE                                            => 'Remote';
+use constant OP_REMOTE_BASE                                       => 'Remote';
 
-use constant OP_REMOTE_NEW                                        => OP_REMOTE . "->new";
+use constant OP_REMOTE_NEW                                        => OP_REMOTE_BASE . "->new";
 
 ####################################################################################################################################
 # Operation constants
@@ -61,80 +61,9 @@ sub new
              {host => $strHost, user => $strUser, command => $strCommand},
              defined($strHost) ? DEBUG : TRACE);
 
-    # Create the class hash
-    my $self = {};
-    bless $self, $class;
-
-    # Create the greeting that will be used to check versions with the remote
-    $self->{strGreeting} = 'PG_BACKREST_REMOTE ' . version_get();
-
-    # Set default block size
-    $self->{iBlockSize} = $iBlockSize;
-
-    # Set compress levels
-    $self->{iCompressLevel} = $iCompressLevel;
-    $self->{iCompressLevelNetwork} = $iCompressLevelNetwork;
-
-    # If host is defined then make a connnection
-    if (defined($strHost))
-    {
-        # User must be defined
-        if (!defined($strUser))
-        {
-            confess &log(ASSERT, 'strUser must be defined');
-        }
-
-        # Command must be defined
-        if (!defined($strCommand))
-        {
-            confess &log(ASSERT, 'strCommand must be defined');
-        }
-
-        $self->{strHost} = $strHost;
-        $self->{strUser} = $strUser;
-        $self->{strCommand} = $strCommand . ' remote';
-
-        # Set SSH Options
-        my $strOptionSSHRequestTTY = 'RequestTTY=yes';
-        my $strOptionSSHCompression = 'Compression=no';
-
-        &log(TRACE, 'connecting to remote ssh host ' . $self->{strHost});
-
-        # Make SSH connection
-        $self->{oSSH} = Net::OpenSSH->new($self->{strHost}, timeout => 600, user => $self->{strUser},
-                                          master_opts => [-o => $strOptionSSHCompression, -o => $strOptionSSHRequestTTY]);
-
-        $self->{oSSH}->error and confess &log(ERROR, "unable to connect to $self->{strHost}: " . $self->{oSSH}->error,
-                                              ERROR_HOST_CONNECT);
-        &log(TRACE, 'connected to remote ssh host ' . $self->{strHost});
-
-        # Execute remote command
-        ($self->{hIn}, $self->{hOut}, $self->{hErr}, $self->{pId}) = $self->{oSSH}->open3($self->{strCommand});
-
-        $self->greeting_read();
-    }
-    elsif (defined($strCommand) && $strCommand eq 'remote')
-    {
-        # Write the greeting so master process knows who we are
-        $self->greeting_write();
-    }
-
-    # Check block size
-    if (!defined($self->{iBlockSize}))
-    {
-        confess &log(ASSERT, 'iBlockSize must be set');
-    }
-
-    # Check compress levels
-    if (!defined($self->{iCompressLevel}))
-    {
-        confess &log(ASSERT, 'iCompressLevel must be set');
-    }
-
-    if (!defined($self->{iCompressLevelNetwork}))
-    {
-        confess &log(ASSERT, 'iCompressLevelNetwork must be set');
-    }
+    # Init object and store variables
+    my $self = $class->SUPER::new(OP_REMOTE, !defined($strHost), $strCommand, $iBlockSize, $iCompressLevel, $iCompressLevelNetwork,
+                                  $strHost, $strUser);
 
     return $self;
 }
@@ -167,27 +96,13 @@ sub process
 {
     my $self = shift;
 
-    # Turn all logging off
-    log_level_set(OFF, OFF);
-
-    # Create the remote object
-    my $oProtocol = new BackRest::Protocol
-    (
-        undef,      # Host
-        undef,      # User
-        'remote',   # Command
-        optionGet(OPTION_BUFFER_SIZE),
-        optionGet(OPTION_COMPRESS_LEVEL),
-        optionGet(OPTION_COMPRESS_LEVEL_NETWORK)
-    );
-
     # Create the file object
     my $oFile = new BackRest::File
     (
         optionGet(OPTION_STANZA, false),
         optionGet(OPTION_REPO_REMOTE_PATH, false),
         undef,
-        $oProtocol,
+        $self,
     );
 
     # Create objects
@@ -204,7 +119,7 @@ sub process
     {
         my %oParamHash;
 
-        $strCommand = $oProtocol->command_read(\%oParamHash);
+        $strCommand = $self->command_read(\%oParamHash);
 
         eval
         {
@@ -258,8 +173,8 @@ sub process
                                      paramGet(\%oParamHash, 'destination_compress'));
                 }
 
-                $oProtocol->output_write(($bResult ? 'Y' : 'N') . " " . (defined($strChecksum) ? $strChecksum : '?') . " " .
-                                       (defined($iFileSize) ? $iFileSize : '?'));
+                $self->output_write(($bResult ? 'Y' : 'N') . " " . (defined($strChecksum) ? $strChecksum : '?') . " " .
+                                    (defined($iFileSize) ? $iFileSize : '?'));
             }
             # List files in a path
             elsif ($strCommand eq OP_FILE_LIST)
@@ -279,23 +194,23 @@ sub process
                     $strOutput .= $strFile;
                 }
 
-                $oProtocol->output_write($strOutput);
+                $self->output_write($strOutput);
             }
             # Create a path
             elsif ($strCommand eq OP_FILE_PATH_CREATE)
             {
                 $oFile->path_create(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path'), paramGet(\%oParamHash, 'mode', false));
-                $oProtocol->output_write();
+                $self->output_write();
             }
             # Check if a file/path exists
             elsif ($strCommand eq OP_FILE_EXISTS)
             {
-                $oProtocol->output_write($oFile->exists(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path')) ? 'Y' : 'N');
+                $self->output_write($oFile->exists(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path')) ? 'Y' : 'N');
             }
             # Wait
             elsif ($strCommand eq OP_FILE_WAIT)
             {
-                $oProtocol->output_write($oFile->wait(PATH_ABSOLUTE));
+                $self->output_write($oFile->wait(PATH_ABSOLUTE));
             }
             # Generate a manifest
             elsif ($strCommand eq OP_FILE_MANIFEST)
@@ -321,7 +236,7 @@ sub process
                             $oManifestHash{name}{"${strName}"}{link_destination} : "");
                 }
 
-                $oProtocol->output_write($strOutput);
+                $self->output_write($strOutput);
             }
             # Archive push checks
             elsif ($strCommand eq OP_ARCHIVE_PUSH_CHECK)
@@ -332,16 +247,16 @@ sub process
                                                                         paramGet(\%oParamHash, 'db-version'),
                                                                         paramGet(\%oParamHash, 'db-sys-id'));
 
-                $oProtocol->output_write("${strArchiveId}\t" . (defined($strChecksum) ? $strChecksum : 'Y'));
+                $self->output_write("${strArchiveId}\t" . (defined($strChecksum) ? $strChecksum : 'Y'));
             }
             elsif ($strCommand eq OP_ARCHIVE_GET_CHECK)
             {
-                $oProtocol->output_write($oArchive->getCheck($oFile));
+                $self->output_write($oArchive->getCheck($oFile));
             }
             # Info list stanza
             elsif ($strCommand eq OP_INFO_LIST_STANZA)
             {
-                $oProtocol->output_write(
+                $self->output_write(
                     $oJSON->encode(
                         $oInfo->listStanza($oFile,
                                        paramGet(\%oParamHash, 'stanza', false))));
@@ -351,7 +266,7 @@ sub process
                 my ($strDbVersion, $iControlVersion, $iCatalogVersion, $ullDbSysId) =
                     $oDb->info($oFile, paramGet(\%oParamHash, 'db-path'));
 
-                $oProtocol->output_write("${strDbVersion}\t${iControlVersion}\t${iCatalogVersion}\t${ullDbSysId}");
+                $self->output_write("${strDbVersion}\t${iControlVersion}\t${iCatalogVersion}\t${ullDbSysId}");
             }
             # Continue if noop or exit
             elsif ($strCommand ne OP_NOOP && $strCommand ne OP_EXIT)
@@ -363,7 +278,7 @@ sub process
         # Process errors
         if ($@)
         {
-            $oProtocol->error_write($@);
+            $self->error_write($@);
         }
     }
 }

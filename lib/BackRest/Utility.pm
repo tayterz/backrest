@@ -104,6 +104,8 @@ sub version_get
     # Construct the version file name
     my $strVersionFile = abs_path(dirname($0) . '/../VERSION');
 
+    &log(DEBUG, "path " . $0);
+
     # Open the file
     if (!open($hVersion, '<', $strVersionFile))
     {
