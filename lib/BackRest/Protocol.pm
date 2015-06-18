@@ -8,6 +8,7 @@ use warnings FATAL => qw(all);
 use Carp qw(confess);
 
 use Compress::Raw::Zlib qw(WANT_GZIP Z_OK Z_BUF_ERROR Z_STREAM_END);
+use Exporter qw(import);
 use File::Basename qw(dirname);
 use IO::String qw();
 use Net::OpenSSH qw();
@@ -26,6 +27,14 @@ use constant OP_PROTOCOL                                            => 'Protocol
 
 use constant OP_PROTOCOL_NEW                                        => OP_PROTOCOL . "->new";
 use constant OP_PROTOCOL_COMMAND_WRITE                              => OP_PROTOCOL . "->commandWrite";
+
+####################################################################################################################################
+# Operation constants
+####################################################################################################################################
+use constant OP_NOOP                                                => 'noop';
+    our @EXPORT = qw(OP_NOOP);
+use constant OP_EXIT                                                => 'exit';
+    push @EXPORT, qw(OP_EXIT);
 
 ####################################################################################################################################
 # CONSTRUCTOR
@@ -1209,6 +1218,28 @@ sub command_execute
     $self->command_write($strCommand, $oParamRef);
 
     return $self->output_read($bOutputRequired, $strErrorPrefix);
+}
+
+####################################################################################################################################
+# paramGet
+#
+# Helper function that returns the param or an error if required and it does not exist.
+####################################################################################################################################
+sub paramGet
+{
+    my $self = shift;
+    my $oParamHashRef = shift;
+    my $strParam = shift;
+    my $bRequired = shift;
+
+    my $strValue = ${$oParamHashRef}{$strParam};
+
+    if (!defined($strValue) && (!defined($bRequired) || $bRequired))
+    {
+        confess "${strParam} must be defined";
+    }
+
+    return $strValue;
 }
 
 1;

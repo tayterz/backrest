@@ -8,13 +8,7 @@ use strict;
 use warnings FATAL => qw(all);
 use Carp qw(confess);
 
-use Compress::Raw::Zlib qw(WANT_GZIP Z_OK Z_BUF_ERROR Z_STREAM_END);
 use File::Basename qw(dirname);
-
-use IO::String qw();
-use Net::OpenSSH qw();
-use POSIX qw(:sys_wait_h);
-use Scalar::Util qw(blessed);
 
 use lib dirname($0) . '/../lib';
 use BackRest::Archive;
@@ -32,15 +26,6 @@ use BackRest::Utility;
 use constant OP_REMOTE                                              => 'Remote';
 
 use constant OP_REMOTE_NEW                                          => OP_REMOTE . "->new";
-
-####################################################################################################################################
-# Operation constants
-####################################################################################################################################
-use constant
-{
-    OP_NOOP        => 'noop',
-    OP_EXIT        => 'exit'
-};
 
 ####################################################################################################################################
 # CONSTRUCTOR
@@ -65,27 +50,6 @@ sub new
                                   $strHost, $strUser);
 
     return $self;
-}
-
-####################################################################################################################################
-# paramGet
-#
-# Helper function that returns the param or an error if required and it does not exist.
-####################################################################################################################################
-sub paramGet
-{
-    my $oParamHashRef = shift;
-    my $strParam = shift;
-    my $bRequired = shift;
-
-    my $strValue = ${$oParamHashRef}{$strParam};
-
-    if (!defined($strValue) && (!defined($bRequired) || $bRequired))
-    {
-        confess "${strParam} must be defined";
-    }
-
-    return $strValue;
 }
 
 ####################################################################################################################################
@@ -135,41 +99,41 @@ sub process
                 if ($strCommand eq OP_FILE_COPY)
                 {
                     ($bResult, $strChecksum, $iFileSize) =
-                        $oFile->copy(PATH_ABSOLUTE, paramGet(\%oParamHash, 'source_file'),
-                                     PATH_ABSOLUTE, paramGet(\%oParamHash, 'destination_file'),
-                                     paramGet(\%oParamHash, 'source_compressed'),
-                                     paramGet(\%oParamHash, 'destination_compress'),
-                                     paramGet(\%oParamHash, 'ignore_missing_source', false),
+                        $oFile->copy(PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'source_file'),
+                                     PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'destination_file'),
+                                     $self->paramGet(\%oParamHash, 'source_compressed'),
+                                     $self->paramGet(\%oParamHash, 'destination_compress'),
+                                     $self->paramGet(\%oParamHash, 'ignore_missing_source', false),
                                      undef,
-                                     paramGet(\%oParamHash, 'mode', false),
-                                     paramGet(\%oParamHash, 'destination_path_create') ? 'Y' : 'N',
-                                     paramGet(\%oParamHash, 'user', false),
-                                     paramGet(\%oParamHash, 'group', false),
-                                     paramGet(\%oParamHash, 'append_checksum', false));
+                                     $self->paramGet(\%oParamHash, 'mode', false),
+                                     $self->paramGet(\%oParamHash, 'destination_path_create') ? 'Y' : 'N',
+                                     $self->paramGet(\%oParamHash, 'user', false),
+                                     $self->paramGet(\%oParamHash, 'group', false),
+                                     $self->paramGet(\%oParamHash, 'append_checksum', false));
                 }
                 # Copy a file from STDIN
                 elsif ($strCommand eq OP_FILE_COPY_IN)
                 {
                     ($bResult, $strChecksum, $iFileSize) =
                         $oFile->copy(PIPE_STDIN, undef,
-                                     PATH_ABSOLUTE, paramGet(\%oParamHash, 'destination_file'),
-                                     paramGet(\%oParamHash, 'source_compressed'),
-                                     paramGet(\%oParamHash, 'destination_compress'),
+                                     PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'destination_file'),
+                                     $self->paramGet(\%oParamHash, 'source_compressed'),
+                                     $self->paramGet(\%oParamHash, 'destination_compress'),
                                      undef, undef,
-                                     paramGet(\%oParamHash, 'mode', false),
-                                     paramGet(\%oParamHash, 'destination_path_create'),
-                                     paramGet(\%oParamHash, 'user', false),
-                                     paramGet(\%oParamHash, 'group', false),
-                                     paramGet(\%oParamHash, 'append_checksum', false));
+                                     $self->paramGet(\%oParamHash, 'mode', false),
+                                     $self->paramGet(\%oParamHash, 'destination_path_create'),
+                                     $self->paramGet(\%oParamHash, 'user', false),
+                                     $self->paramGet(\%oParamHash, 'group', false),
+                                     $self->paramGet(\%oParamHash, 'append_checksum', false));
                 }
                 # Copy a file to STDOUT
                 elsif ($strCommand eq OP_FILE_COPY_OUT)
                 {
                     ($bResult, $strChecksum, $iFileSize) =
-                        $oFile->copy(PATH_ABSOLUTE, paramGet(\%oParamHash, 'source_file'),
+                        $oFile->copy(PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'source_file'),
                                      PIPE_STDOUT, undef,
-                                     paramGet(\%oParamHash, 'source_compressed'),
-                                     paramGet(\%oParamHash, 'destination_compress'));
+                                     $self->paramGet(\%oParamHash, 'source_compressed'),
+                                     $self->paramGet(\%oParamHash, 'destination_compress'));
                 }
 
                 $self->output_write(($bResult ? 'Y' : 'N') . " " . (defined($strChecksum) ? $strChecksum : '?') . " " .
@@ -180,10 +144,10 @@ sub process
             {
                 my $strOutput;
 
-                foreach my $strFile ($oFile->list(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path'),
-                                                  paramGet(\%oParamHash, 'expression', false),
-                                                  paramGet(\%oParamHash, 'sort_order'),
-                                                  paramGet(\%oParamHash, 'ignore_missing')))
+                foreach my $strFile ($oFile->list(PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'path'),
+                                                  $self->paramGet(\%oParamHash, 'expression', false),
+                                                  $self->paramGet(\%oParamHash, 'sort_order'),
+                                                  $self->paramGet(\%oParamHash, 'ignore_missing')))
                 {
                     if (defined($strOutput))
                     {
@@ -198,13 +162,14 @@ sub process
             # Create a path
             elsif ($strCommand eq OP_FILE_PATH_CREATE)
             {
-                $oFile->path_create(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path'), paramGet(\%oParamHash, 'mode', false));
+                $oFile->path_create(PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'path'),
+                                    $self->paramGet(\%oParamHash, 'mode', false));
                 $self->output_write();
             }
             # Check if a file/path exists
             elsif ($strCommand eq OP_FILE_EXISTS)
             {
-                $self->output_write($oFile->exists(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path')) ? 'Y' : 'N');
+                $self->output_write($oFile->exists(PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'path')) ? 'Y' : 'N');
             }
             # Wait
             elsif ($strCommand eq OP_FILE_WAIT)
@@ -216,7 +181,7 @@ sub process
             {
                 my %oManifestHash;
 
-                $oFile->manifest(PATH_ABSOLUTE, paramGet(\%oParamHash, 'path'), \%oManifestHash);
+                $oFile->manifest(PATH_ABSOLUTE, $self->paramGet(\%oParamHash, 'path'), \%oManifestHash);
 
                 my $strOutput = "name\ttype\tuser\tgroup\tmode\tmodification_time\tinode\tsize\tlink_destination";
 
@@ -241,10 +206,10 @@ sub process
             elsif ($strCommand eq OP_ARCHIVE_PUSH_CHECK)
             {
                 my ($strArchiveId, $strChecksum) = $oArchive->pushCheck($oFile,
-                                                                        paramGet(\%oParamHash, 'wal-segment'),
+                                                                        $self->paramGet(\%oParamHash, 'wal-segment'),
                                                                         undef,
-                                                                        paramGet(\%oParamHash, 'db-version'),
-                                                                        paramGet(\%oParamHash, 'db-sys-id'));
+                                                                        $self->paramGet(\%oParamHash, 'db-version'),
+                                                                        $self->paramGet(\%oParamHash, 'db-sys-id'));
 
                 $self->output_write("${strArchiveId}\t" . (defined($strChecksum) ? $strChecksum : 'Y'));
             }
@@ -257,13 +222,12 @@ sub process
             {
                 $self->output_write(
                     $oJSON->encode(
-                        $oInfo->listStanza($oFile,
-                                       paramGet(\%oParamHash, 'stanza', false))));
+                        $oInfo->listStanza($oFile, $self->paramGet(\%oParamHash, 'stanza', false))));
             }
             elsif ($strCommand eq OP_DB_INFO)
             {
                 my ($strDbVersion, $iControlVersion, $iCatalogVersion, $ullDbSysId) =
-                    $oDb->info($oFile, paramGet(\%oParamHash, 'db-path'));
+                    $oDb->info($oFile, $self->paramGet(\%oParamHash, 'db-path'));
 
                 $self->output_write("${strDbVersion}\t${iControlVersion}\t${iCatalogVersion}\t${ullDbSysId}");
             }

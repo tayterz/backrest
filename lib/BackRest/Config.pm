@@ -48,6 +48,8 @@ use constant CMD_BACKUP                                           => 'backup';
     push @EXPORT, qw(CMD_BACKUP);
 use constant CMD_INFO                                             => 'info';
     push @EXPORT, qw(CMD_INFO);
+use constant CMD_LOCAL                                            => 'local';
+    push @EXPORT, qw(CMD_LOCAL);
 use constant CMD_REMOTE                                           => 'remote';
     push @EXPORT, qw(CMD_REMOTE);
 use constant CMD_RESTORE                                          => 'restore';
@@ -423,6 +425,10 @@ my %oOptionRule =
             {
                 &OPTION_RULE_REQUIRED => true
             },
+            &CMD_LOCAL =>
+            {
+                &OPTION_RULE_REQUIRED => true
+            },
             &CMD_REMOTE =>
             {
                 &OPTION_RULE_REQUIRED => false
@@ -693,6 +699,7 @@ my %oOptionRule =
             &CMD_ARCHIVE_PUSH => true,
             &CMD_BACKUP => true,
             &CMD_INFO => true,
+            &CMD_LOCAL => true,
             &CMD_RESTORE => true,
             &CMD_EXPIRE => true
         },
@@ -708,6 +715,7 @@ my %oOptionRule =
             &CMD_ARCHIVE_GET => true,
             &CMD_ARCHIVE_PUSH => true,
             &CMD_INFO => true,
+            &CMD_LOCAL => true,
             &CMD_REMOTE => true,
             &CMD_RESTORE => true
         },
@@ -816,6 +824,7 @@ my %oOptionRule =
             &CMD_ARCHIVE_PUSH => true,
             &CMD_BACKUP => true,
             &CMD_INFO => true,
+            &CMD_LOCAL => true,
             &CMD_REMOTE => true,
             &CMD_RESTORE => true
         }
@@ -834,6 +843,7 @@ my %oOptionRule =
             &CMD_ARCHIVE_PUSH => true,
             &CMD_BACKUP => true,
             &CMD_INFO => true,
+            &CMD_LOCAL => true,
             &CMD_REMOTE => true,
             &CMD_RESTORE => true
         }
@@ -1238,6 +1248,7 @@ sub optionValid
         $strCommand ne CMD_ARCHIVE_PUSH &&
         $strCommand ne CMD_BACKUP &&
         $strCommand ne CMD_INFO &&
+        $strCommand ne CMD_LOCAL &&
         $strCommand ne CMD_REMOTE &&
         $strCommand ne CMD_RESTORE &&
         $strCommand ne CMD_EXPIRE)

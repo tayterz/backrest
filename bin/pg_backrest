@@ -22,8 +22,9 @@ use BackRest::Db;
 use BackRest::Exception;
 use BackRest::File;
 use BackRest::Info;
+use BackRest::Local;
 use BackRest::Lock;
-use BackRest::Protocol qw(DB BACKUP NONE);
+use BackRest::Protocol;
 use BackRest::Remote;
 use BackRest::Restore;
 use BackRest::ThreadGroup;
@@ -143,9 +144,7 @@ eval
         # Create the remote object
         my $oRemote = new BackRest::Remote
         (
-            undef,      # Host
-            undef,      # User
-            'remote',   # Command
+            undef, undef, undef,
             optionGet(OPTION_BUFFER_SIZE),
             optionGet(OPTION_COMPRESS_LEVEL),
             optionGet(OPTION_COMPRESS_LEVEL_NETWORK)
@@ -153,6 +152,27 @@ eval
 
         # Process remote requests
         safe_exit($oRemote->process());
+    }
+
+    ################################################################################################################################
+    # Process local commands
+    ################################################################################################################################
+    if (commandTest(CMD_LOCAL))
+    {
+        # Turn all logging off
+        log_level_set(OFF, OFF);
+
+        # Create the remote object
+        my $oLocal = new BackRest::Local
+        (
+            undef,
+            optionGet(OPTION_BUFFER_SIZE),
+            optionGet(OPTION_COMPRESS_LEVEL),
+            optionGet(OPTION_COMPRESS_LEVEL_NETWORK)
+        );
+
+        # Process remote requests
+        safe_exit($oLocal->process());
     }
 
     # Set the log levels
