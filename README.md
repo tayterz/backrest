@@ -54,6 +54,8 @@ sudo apt-get update
 
 apt-get install postgresql-9.3
 ```
+* Perl version 5.12 or greater is required.
+
 * Install required Perl modules:
 ```
 cpanm Net::OpenSSH
