@@ -411,7 +411,7 @@ sub backup_file
     }
 
     # Iterate all backup files
-    foreach my $strPathKey (sort (keys %oFileCopyMap))
+    foreach my $strPathKey (sort(keys %oFileCopyMap))
     {
         if ($iThreadMax > 1)
         {

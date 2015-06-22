@@ -25,12 +25,13 @@ use BackRest::Ini;
 use BackRest::Utility;
 
 use lib dirname($0) . '/lib';
+use BackRestTest::BackupTest;
 use BackRestTest::CommonTest;
-use BackRestTest::UtilityTest;
+use BackRestTest::CompareTest;
 use BackRestTest::ConfigTest;
 use BackRestTest::FileTest;
-use BackRestTest::BackupTest;
-use BackRestTest::CompareTest;
+use BackRestTest::LocalTest;
+use BackRestTest::UtilityTest;
 
 ####################################################################################################################################
 # Usage
@@ -274,6 +275,11 @@ eval
             if ($strModule eq 'all' || $strModule eq 'file')
             {
                 BackRestTestFile_Test($strModuleTest);
+            }
+
+            if ($strModule eq 'all' || $strModule eq 'local')
+            {
+                BackRestTestLocal_Test($strModuleTest);
             }
 
             if ($strModule eq 'all' || $strModule eq 'backup')

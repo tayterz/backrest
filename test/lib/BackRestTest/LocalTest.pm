@@ -11,15 +11,17 @@ use strict;
 use warnings FATAL => qw(all);
 use Carp qw(confess);
 
+use Exporter qw(import);
 use File::Basename qw(dirname);
 
 use lib dirname($0) . '/../lib';
-use BackRest::Local;
+use BackRest::LocalGroup;
+use BackRest::Utility;
 
 use BackRestTest::CommonTest;
 
 ####################################################################################################################################
-# BackRestTestConfigLocal_Test
+# BackRestTestLocal_Test
 ####################################################################################################################################
 our @EXPORT = qw(BackRestTestLocal_Test);
 
@@ -32,17 +34,31 @@ sub BackRestTestLocal_Test
     my $bCreate;
     my $strStanza = 'main';
 
+    my $strModule = 'local';
+    my $strThisTest;
+
     # Print test banner
-    &log(INFO, 'LOCAL MODULE ******************************************************************');
+    &log(INFO, uc($strModule) . ' MODULE ******************************************************************');
     BackRestTestCommon_Drop();
 
     #-------------------------------------------------------------------------------------------------------------------------------
-    # Test command-line options
+    # Test backup
     #-------------------------------------------------------------------------------------------------------------------------------
-    if ($strTest eq 'all' || $strTest eq 'local')
+    $strThisTest = 'backup';
+
+    if ($strTest eq 'all' || $strTest eq $strThisTest)
     {
         $iRun = 0;
-        &log(INFO, "Local module\n");
+
+        my $oGroup = new BackRest::LocalGroup(1);
+
+        $oGroup->backupAdd('base', 'source1', 'dest', true, undef, 1234, 1111);
+        $oGroup->backupAdd('base', 'source2', 'dest', true, undef, 1234, 5555);
+        $oGroup->backupAdd('tablespace1', 'source3', 'dest', true, undef, 1234, 2222);
+
+        $oGroup->process();
+
+        &log(INFO, "Test ${strThisTest}\n");
     }
 }
 
