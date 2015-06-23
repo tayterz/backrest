@@ -50,7 +50,7 @@ sub BackRestTestLocal_Test
     {
         $iRun = 0;
 
-        my $oGroup = new BackRest::LocalGroup(1);
+        my $oGroup = new BackRest::LocalGroup(2);
 
         $oGroup->backupAdd('base', 'source1', 'dest', true, undef, 1234, 1111);
         $oGroup->backupAdd('base', 'source2', 'dest', true, undef, 1234, 5555);

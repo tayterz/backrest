@@ -29,6 +29,8 @@ use constant WORK_DESTINATION_FILE                                  => 'destinat
 use constant WORK_SOURCE_FILE                                       => 'source-file';
 use constant WORK_TIMESTAMP                                         => 'timestamp';
 
+use constant QUEUE_DEPTH_MAX                                        => 10;
+
 ####################################################################################################################################
 # CONSTRUCTOR
 ####################################################################################################################################
@@ -44,6 +46,14 @@ sub new
     $self->{iProcessTotal} = defined($iProcessTotal) ? $iProcessTotal : optionGet(OPTION_PROCESS_MAX);
     $self->{oWorkQueue} = {};
     $self->{oWorkList} = undef;
+
+    # Create the process work lists
+    $self->{oProcessList} = [];
+
+    for (my $iProcessIdx = 0; $iProcessIdx < $iProcessTotal; $iProcessIdx++)
+    {
+        push $self->{oProcessList}, [];
+    }
 
     return $self;
 }
@@ -106,22 +116,37 @@ sub process
             &log(DEBUG, "pushing ${strPathKey}");
             push $oWorkList, $oWorkSub;
         }
+
+        $self->{oWorkList} = $oWorkList;
     }
 
-    # Make sure this is working
-    for (my $iGroupIdx = 0; $iGroupIdx < @{$oWorkList}; $iGroupIdx++)
+    my $iTablespaceTotal = @{$oWorkList};
+
+    # Push work into the process queues
+    for (my $iProcessIdx = 0; $iProcessIdx < $self->{iProcessTotal}; $iProcessIdx++)
     {
-        my $oSubList = $$oWorkList[$iGroupIdx];
+        my $oProcessList = ${$self->{oProcessList}}[$iProcessIdx];
 
-        &log(DEBUG, "group ${iGroupIdx}");
-
-        for(my $iFileIdx = 0; $iFileIdx < @{$oSubList}; $iFileIdx++)
+        if (@{$oProcessList} < QUEUE_DEPTH_MAX && @{$$oWorkList[0]} > 0)
         {
-            my $oFile = $$oSubList[$iFileIdx];
-
-            &log(DEBUG, "    file " . $$oFile{&WORK_SOURCE_FILE});
+            
         }
     }
+
+    # # Make sure this is working
+    # for (my $iGroupIdx = 0; $iGroupIdx < @{$oWorkList}; $iGroupIdx++)
+    # {
+    #     my $oSubList = $$oWorkList[$iGroupIdx];
+    #
+    #     &log(DEBUG, "group ${iGroupIdx}");
+    #
+    #     for(my $iFileIdx = 0; $iFileIdx < @{$oSubList}; $iFileIdx++)
+    #     {
+    #         my $oFile = $$oSubList[$iFileIdx];
+    #
+    #         &log(DEBUG, "    file " . $$oFile{&WORK_SOURCE_FILE});
+    #     }
+    # }
 }
 
 1;
