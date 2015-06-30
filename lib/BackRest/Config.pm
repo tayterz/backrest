@@ -601,7 +601,8 @@ my %oOptionRule =
         &OPTION_RULE_SECTION => CONFIG_SECTION_COMMAND,
         &OPTION_RULE_COMMAND =>
         {
-            &CMD_BACKUP => true
+            &CMD_BACKUP => true,
+            &CMD_REMOTE => true
         }
     },
 
@@ -611,7 +612,8 @@ my %oOptionRule =
         &OPTION_RULE_SECTION => CONFIG_SECTION_COMMAND,
         &OPTION_RULE_COMMAND =>
         {
-            &CMD_BACKUP => true
+            &CMD_BACKUP => true,
+            &CMD_REMOTE => true
         },
         &OPTION_RULE_REQUIRED => false,
         &OPTION_RULE_DEPEND =>
