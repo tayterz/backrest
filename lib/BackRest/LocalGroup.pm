@@ -31,7 +31,7 @@ use constant WORK_DESTINATION_FILE                                  => 'destinat
 use constant WORK_SOURCE_FILE                                       => 'source-file';
 use constant WORK_TIMESTAMP                                         => 'timestamp';
 
-use constant QUEUE_DEPTH_MAX                                        => 10;
+use constant QUEUE_DEPTH_MAX                                        => 2;
 
 ####################################################################################################################################
 # CONSTRUCTOR
