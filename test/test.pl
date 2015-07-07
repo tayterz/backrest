@@ -124,10 +124,10 @@ if (@ARGV > 0)
 }
 
 # Must be run from the test path so relative paths to bin can be tested
-if ($0 ne './test.pl')
-{
-    confess 'test.pl must be run from the test path';
-}
+# if ($0 ne './test.pl')
+# {
+#     confess 'test.pl must be run from the test path';
+# }
 
 ####################################################################################################################################
 # Setup
