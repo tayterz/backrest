@@ -101,6 +101,8 @@ sub new
     }
     elsif (defined($strCommand))
     {
+        my $strCommandFinal;
+
         # If host is defined then make a connnection
         if (defined($strHost))
         {
@@ -121,20 +123,20 @@ sub new
             $self->{strCommand} = $strCommand;
 
             # Generate remote command
-            my $strCommandSSH = "ssh -q -o Compression=no ${strUser}\@${strHost} '" . $self->{strCommand} . "'";
-
-            &log(TRACE, 'connecting to remote ssh host ' . $self->{strHost});
-
-            # Open the remote command and read the greeting to make sure it worked
-            $self->{pId} = open3($self->{hIn}, $self->{hOut}, $self->{hErr}, $strCommandSSH);
-            $self->greeting_read();
-
-            &log(TRACE, 'connected to remote ssh host ' . $self->{strHost});
+            my $strCommandFinal = "ssh -q -o Compression=no ${strUser}\@${strHost} '" . $self->{strCommand} . "'";
         }
         else
         {
-            confess &log(ASSERT, 'local operation not yet supported');
+            $strCommandFinal = $strCommand;
         }
+
+        logTrace(OP_PROTOCOL_NEW, DEBUG_MISC, 'connecting to protocol', {name => $strName, commandFinal => $strCommandFinal});
+
+        # Open the remote command and read the greeting to make sure it worked
+        $self->{pId} = open3($self->{hIn}, $self->{hOut}, $self->{hErr}, $strCommandFinal);
+        $self->greeting_read();
+
+        logTrace(OP_PROTOCOL_NEW, DEBUG_MISC, 'connected to protocol', {name => $strName, commandFinal => $strCommandFinal});
     }
 
     return $self;

@@ -8,9 +8,11 @@ use warnings FATAL => qw(all);
 use Carp qw(confess);
 
 use File::Basename qw(dirname);
+use IPC::Open3;
 
 use lib dirname($0) . '/../lib';
 use BackRest::Config;
+use BackRest::Local;
 use BackRest::Utility;
 
 ####################################################################################################################################
@@ -36,8 +38,12 @@ use constant QUEUE_DEPTH_MAX                                        => 10;
 ####################################################################################################################################
 sub new
 {
-    my $class = shift;              # Class name
-    my $iProcessTotal = shift;      # Total local processes to spawn (if undef use optionGet())
+    my $class = shift;                  # Class name
+    my $strCommand = shift;             # Local command
+    my $iProcessTotal = shift;          # Total local processes to spawn (if undef use optionGet())
+    my $iBlockSize = shift;             # Buffer size
+    my $iCompressLevel = shift;         # Set compression level
+    my $iCompressLevelNetwork = shift;  # Set compression level for network only compression
 
     # Create the class hash
     my $self = {};
@@ -49,9 +55,13 @@ sub new
 
     # Create the process work lists
     $self->{oProcessList} = [];
+    $self->{oChildList} = [];
 
     for (my $iProcessIdx = 0; $iProcessIdx < $iProcessTotal; $iProcessIdx++)
     {
+        ${$self->{oChildList}}[$iProcessIdx] = new BackRest::Local($strCommand, $iBlockSize, $iCompressLevel,
+                                                                   $iCompressLevelNetwork);
+
         push $self->{oProcessList}, [];
     }
 
@@ -147,6 +157,8 @@ sub process
     #         &log(DEBUG, "    file " . $$oFile{&WORK_SOURCE_FILE});
     #     }
     # }
+
+    sleep(10);
 }
 
 1;

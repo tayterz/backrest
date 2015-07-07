@@ -33,7 +33,7 @@ use constant OP_LOCAL_NEW                                           => OP_LOCAL 
 sub new
 {
     my $class = shift;                  # Class name
-    my $strCommand = shift;             # Command to execute on remote ('remote' if this is the remote)
+    my $strCommand = shift;             # Command to execute
     my $iBlockSize = shift;             # Buffer size
     my $iCompressLevel = shift;         # Set compression level
     my $iCompressLevelNetwork = shift;  # Set compression level for network only compression

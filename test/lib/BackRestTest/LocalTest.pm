@@ -15,6 +15,7 @@ use Exporter qw(import);
 use File::Basename qw(dirname);
 
 use lib dirname($0) . '/../lib';
+use BackRest::Config;
 use BackRest::LocalGroup;
 use BackRest::Utility;
 
@@ -50,7 +51,18 @@ sub BackRestTestLocal_Test
     {
         $iRun = 0;
 
-        my $oGroup = new BackRest::LocalGroup(2);
+        my $strCommand = BackRestTestCommon_CommandMainAbsGet() .
+                         ' --stanza=' . BackRestTestCommon_StanzaGet() .
+                         ' ' . CMD_LOCAL;
+
+        my $oGroup = new BackRest::LocalGroup
+        (
+            $strCommand,                            # Local command to run
+            2,                                      # Number of local processes to run
+            OPTION_DEFAULT_BUFFER_SIZE,             # Buffer size
+            OPTION_DEFAULT_COMPRESS_LEVEL,          # Compress level
+            OPTION_DEFAULT_COMPRESS_LEVEL_NETWORK   # Compress network level
+        );
 
         $oGroup->backupAdd('base', 'source1', 'dest', true, undef, 1234, 1111);
         $oGroup->backupAdd('base', 'source2', 'dest', true, undef, 1234, 5555);

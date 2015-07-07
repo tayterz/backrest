@@ -94,7 +94,7 @@ eval
         # Turn all logging off
         log_level_set(OFF, OFF);
 
-        # Create the remote object
+        # Create the local object
         my $oLocal = new BackRest::Local
         (
             undef,
@@ -103,7 +103,7 @@ eval
             optionGet(OPTION_COMPRESS_LEVEL_NETWORK)
         );
 
-        # Process remote requests
+        # Process local requests
         safe_exit($oLocal->process());
     }
 
