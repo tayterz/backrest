@@ -112,7 +112,7 @@ sub new
             $self->{strCommand} = $strCommand;
 
             # Generate remote command
-            my $strCommandSSH = "ssh -o Compression=no ${strUser}\@${strHost} '" . $self->{strCommand} . "'";
+            my $strCommandSSH = "ssh -q -o Compression=no ${strUser}\@${strHost} '" . $self->{strCommand} . "'";
 
             &log(TRACE, 'connecting to remote ssh host ' . $self->{strHost});
 
